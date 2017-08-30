@@ -303,7 +303,9 @@ Random forest also gives us which features are the most important (using the amo
 The `yr` and `mon` are the most important features as expected from our analysis above. It looks like the word `bowl` is also very important, possibly due to the popularity of *one bown dinners* nowadays. 
 
 ## Final words
-In this post, I illustrated the use of web scraping, data wrangling and natural language processing tools in R. There are many interesting projects one can do with online food blog data, and this is only a scratch on the surface. 
+In this post, I illustrated the use of web scraping, data wrangling and natural language processing tools in R. As a case study, I showed how insgights can be obtaioned from the food blog data, such as the occurance of words and how they relate to the type of food as well as to the number of ratings a recipe receives. 
+
+There are many interesting projects one can do with online food blog data, and this is only a scratch on the surface. Thanks for reading!
 
 ## About the author
 Burak is a data scientist and a computational physicist currently working at UCSB. He holds a Ph.D in physics, and worked on computational modelling of materials and applications of machine learning for discovering new compounds. He has a wide range of interests including image recognition, natural language processing, and time-series analaysis for applications in healthcare data. 
