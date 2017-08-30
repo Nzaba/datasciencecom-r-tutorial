@@ -103,8 +103,8 @@ The data frame `all_recipes_df` contains all the recipes on the blog and has the
 
 The code for The Full Helping is significantly different, and the returned data frame does not have the same fields. I will not dicsuss it here on the post, but the code is included in the repository for interested readers. 
 
-## Exploratory Analysis
-Now that we have the collected all the recipes, we can do some exploration. First, let's see which words are most common in the recipes. We will make use of the `tidytext` and `tokenizers` packages for this task. The `ingredients` field contains a flat text file with each line ending with "\n". So our task is to split the text, remove any leftover html tags, and then convert the data frame in long format. What is meant with the long format is that each column will contain one word, so a ringle recipe is spread into multiple columns, whose size is determined by the number of words in the ingredients. This is achieved by the following code snippet
+## Data Wrangling Exploratory Analysis
+Now that we have the collected all the recipes, we can do some exploration. First, let's see which words are most common in the recipes. We will make use of the `tidytext` and `tokenizers` packages for this task. The `ingredients` field contains a flat text file with each line ending with "\n". So our task is to split the text, remove any leftover html tags, and then convert the data frame in long format. What is meant with the long format is that each row will contain one word, so a ringle recipe is spread into multiple rows, whose size is determined by the number of words in the ingredients. This is achieved by the following code snippet
 
 ```r
 # Assing and ID number to each recipe
@@ -149,9 +149,115 @@ df_ingrdt <- df_ingrdt %>%
   filter(!(str_detect(word, "[0-9]")))  # Remove numbers as well
 ```
 
-After this step, we have a much better looking data frame. The wordcloud from all the ingredients look lik
+After this step, we have a much better looking data frame. The wordcloud from all the ingredients looks like
 
 ![title](img/wordcloud.png)
 
-Now ...
+Let's also look at how words in all the recipes are associated with each other. Certain words would tend to cluster in certain types of recipes, for example one would expect to see sugar, flour and baking in a given recipe, but not garlic and chocolate (hopefully!). So let's perform a few steps of data wrangling to visualize how words are distributed. 
 
+Firts let us simply reduce the number of words by limiting to the top 25
+
+```r
+top_words <- df_ingrdt %>% count(word, sort = TRUE) %>% slice(1:25)
+df_ingrdt <-df_ingrdt %>%
+  filter(word %in% top_words$word)
+```
+
+Now, we can use the `spread` function to spread the rows into columns, where there is one row for each recipe and words are columns containing the number of times they appear.
+
+```r
+df_ingrdt <- df_ingrdt %>% 
+  group_by(ID) %>%
+  count(word) %>%
+  spread(key = word, value = n, fill = 0) %>%
+  ungroup()
+```
+
+This is how `df_ingrdt` look like now:
+
+```
+##      ID baking brown butter cheese chicken chopped cloves cream flour
+##   <int>  <dbl> <dbl>  <dbl>  <dbl>   <dbl>   <dbl>  <dbl> <dbl> <dbl>
+## 1     1      0     0      0      0       0       4      1     0     0
+## 2     2      0     0      0      0       1       1      0     0     0
+## 3     3      0     0      0      0       0       0      0     0     0
+## 4     4      0     2      0      0       0       2      1     0     0
+## 5     5      0     0      1      0       0       0      0     0     0
+## 6     6      0     1      0      1       0       0      1     0     1
+## # ... with 16 more variables: fresh <dbl>, garlic <dbl>, juice <dbl>,
+## #   milk <dbl>, minced <dbl>, oil <dbl>, olive <dbl>, pepper <dbl>,
+## #   powder <dbl>, salt <dbl>, sauce <dbl>, shredded <dbl>, sugar <dbl>,
+## #   taste <dbl>, used <dbl>, water <dbl>
+```
+
+The number of words appearing in a given recipe is not really what I we are looking for. Rather, we want to know whether a word appears in the ingredients or not. So, let’s process a bit further by
+
+```r
+vars <- setdiff(names(df_ingrdt), "ID")
+df_ingrdt <- df_ingrdt %>%
+  mutate_at(vars, function(x) ifelse(x > 0, 1, 0))
+```
+
+As a result, we obtain a table with one-hot encoded words for each recipe. Let's construct the [principal component](https://en.wikipedia.org/wiki/Principal_component_analysis) vectors, and use the first two to visulaize the data
+
+```r
+## Principal components for ingredients
+data <- df_ingrdt %>% select(-ID)
+pc <- prcomp(data, scale = TRUE)
+
+# Plot the first two principal components
+biplot(pc, scale = FALSE, cex = c(0.2, 0.8) )
+```
+
+![title](img/PCA_ingredients.png)
+
+The x and y axes are the first two principal component vetors, and each red vector correspond to the projection of the associated word on these principal component vectors. The plot shows which words tend to be close to each other and provide some insights on the recipes:
+
+* Ingredient vectors used in baking tend to be close to each other (milk, sugar, butter, flour etc.)
+* Cheese, slice and shredded are close to each other (for obvious reasons)
+* Garlic, minced, cloves, olive, oil are close to each other
+* All of these groups of vectors point along different directions
+
+We can perform a similar exercise for the `description` field as well, and it leads to similar results. 
+
+## Inference
+
+Now that we have gone through all this trouble and scraping and tidying the data, let's try to experiment with predictive algorithms. We can devide to go in several avenues here, but there are several issues here. One is temped to use the data for predicting ratings, however this is a bit problematic once we look at their distribution
+
+![title](img/ratinghistogram.png)
+
+Most of the ratings are all 5 stars! This is not a surprise, since individual food blogs tend to have a relatively small following and the followers are those who enjoy the recipes so they rate them high. Instead, let's split look at number of reviews and assign recipes with number of reviews higher than the median (which is 9 at the time) as `high` and smaller than the median as `low`. This is a much more balanced target to predict (actually, it is almost 50/50 high-low ratio since we use the median). 
+
+Instead of the ingredients, let's look at how the name of the recipe effects whether it is rated a large number of times. We perform the same exercise as above (use the `name` field instead of `ingredients`), which you can find in the repository. We end up with a data frame whose first entries are as follows:
+
+```
+  ID highViews mon   yr     word
+1  1         1   8 2017     best
+2  1         1   8 2017    detox
+3  1         1   8 2017 broccoli
+4  1         1   8 2017    chees
+5  1         1   8 2017     soup
+6  2         1   8 2017 cheater'
+```
+The `ID` is the unique identifier of a recipe, `highViews` is 1 for recipes that are rated more than 9 times (i.e. the median), `yr` and `mon` are the year and month when the recipe is published and `word` is the [stem](https://en.wikipedia.org/wiki/Stemming) of the word that appears in the recipe. The next step is again spreading words to columns where each new column is either 1 or 0 (1 if the word is included in the name of the recipe, 0 otherwise). In this case, I chose the top 50 words appearing in the names of the recipes to keep in columns. Here is how the final table looks like:
+
+```
+     ID chicken salad chocol  span class    fn  sauc garlic butter potato sweet peanut creami spici  cake
+  <int>   <dbl> <dbl>  <dbl> <dbl> <dbl> <dbl> <dbl>  <dbl>  <dbl>  <dbl> <dbl>  <dbl>  <dbl> <dbl> <dbl>
+1     1       0     0      0     0     0     0     0      0      0      0     0      0      0     0     0
+2     2       0     1      0     0     0     0     0      0      0      0     0      0      0     0     0
+3     3       0     0      0     0     0     0     0      0      0      0     0      0      0     0     0
+4     4       0     0      0     0     0     0     0      0      0      0     0      0      0     0     0
+5     5       0     0      0     0     0     0     0      0      0      0     0      0      0     0     0
+6     6       0     0      0     0     0     0     0      0      0      0     0      0      0     0     0
+# ... with 39 more variables: chees <dbl>, roast <dbl>, minut <dbl>, bake <dbl>, bowl <dbl>, rice <dbl>,
+#   cooki <dbl>, healthi <dbl>, muffin <dbl>, curri <dbl>, bar <dbl>, caramel <dbl>, coconut <dbl>,
+#   soup <dbl>, appl <dbl>, cinnamon <dbl>, dress <dbl>, easi <dbl>, lemon <dbl>, pumpkin <dbl>,
+#   bean <dbl>, corn <dbl>, quinoa <dbl>, honei <dbl>, ingredi <dbl>, pizza <dbl>, shrimp <dbl>,
+#   tomato <dbl>, banana <dbl>, best <dbl>, lentil <dbl>, noodl <dbl>, squash <dbl>, bacon <dbl>,
+#   crockpot <dbl>, rating <dbl>, highViews <dbl>, mon <dbl>, yr <dbl>
+```
+
+Before trying a model for predicting `highViews`, let's see whether we can obtain some insights by visualizing the data. Below is a plot that shows the high and low number of ratings in each month and year:
+
+![title](img/viewsbydate.png)
