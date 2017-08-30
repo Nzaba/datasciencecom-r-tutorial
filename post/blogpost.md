@@ -309,3 +309,4 @@ There are many interesting projects one can do with online food blog data, and t
 
 ## About the author
 Burak is a data scientist and a computational physicist currently working at UCSB. He holds a Ph.D in physics, and worked on computational modelling of materials and applications of machine learning for discovering new compounds. He has a wide range of interests including image recognition, natural language processing, and time-series analaysis for applications in healthcare data. 
+Burak's projects can be viweved from his [personal site](https://burakhimmetoglu.com/).
