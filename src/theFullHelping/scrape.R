@@ -39,25 +39,3 @@ if (!file.exists("all_recipes.RData")){
 } else {
   load(file = "all_recipes.RData")
 }
-
-## Now that we have all the links, let's collect all the photos
-if(!file.exists("all_photos.RData")){
-  # Initiate
-  all_photos_df <- get_recipe_image(all_links[1])
-  
-  # I will use a for look just to see the progress (instead of map_df)
-  for (ii in 2:length(all_links)){
-    link_to_recipe <- all_links[ii]
-    # If NULL is returned continue with next iteration
-    if (is.null(get_recipe_image(link_to_recipe))){
-      next
-    }
-    all_photos_df <- rbind(all_photos_df, get_recipe_image(link_to_recipe))
-    cat("Scraped recipe image: ", ii, " of ", length(all_links), "\n")
-  }
-  
-  # Save for later use
-  save(all_photos_df, file="all_photos.RData")
-} else {
-  load(file="all_photos.RData")
-}
