@@ -1,5 +1,5 @@
-# From web scraping to modelling: Analyzing online food blogs with R
-### Author: Burak Himmetoglu
+# Scraping and Wrangling Data: Analyzing online food blogs with R
+#### Author: Burak Himmetoglu
 ---------
 
 The web is an ocean where data scientists can gather lots of useful and interesting data. Despite its vastness, this data usually comes in a rather messy format, and requires significant cleaning and wrangling before it can be used in an inferential study. Therefore, the data scientist's **hacking skills** are needed for this usually quite cumbersome task.  
@@ -305,3 +305,5 @@ The `yr` and `mon` are the most important features as expected from our analysis
 ## Final words
 In this post, I illustrated the use of web scraping, data wrangling and natural language processing tools in R. There are many interesting projects one can do with online food blog data, and this is only a scratch on the surface. 
 
+## About the author
+Burak is a data scientist and a computational physicist currently working at UCSB. He holds a Ph.D in physics, and worked on computational modelling of materials and applications of machine learning for discovering new compounds. He has a wide range of interests including image recognition, natural language processing, and time-series analaysis for applications in healthcare data. 
