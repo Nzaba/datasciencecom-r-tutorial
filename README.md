@@ -10,5 +10,5 @@ they are included in different folders.
 
 #### **post**
 
-The [blog post](https://github.com/bhimmetoglu/datasciencecom-r-tutorial/blob/master/post/blogpost.md) is contained in this folder. A [notebook](https://github.com/bhimmetoglu/datasciencecom-r-tutorial/blob/master/post/contains/foodBlogs.md) 
+The [post](https://github.com/bhimmetoglu/datasciencecom-r-tutorial/blob/master/post/blogpost.md) is contained in this folder. A [notebook](https://github.com/bhimmetoglu/datasciencecom-r-tutorial/blob/master/post/contains/foodBlogs.md) 
 for data exploration is also included which contains additional details that complements the blog.
