@@ -4,7 +4,7 @@
 
 The web is an ocean where data scientists can gather lots of useful and interesting data. Despite its vastness, this data usually comes in a rather messy format, and requires significant cleaning and wrangling before it can be used in an inferential study. Therefore, the data scientist's **hacking skills** are needed for this usually quite cumbersome task.  
 
-In this tutorial, I will walk the reader through the steps of obtaining, cleaning and visualizing data scraped from the web using R. As an example, I will consider online food blogs and illustrate how one can get insights on recipes, ingredients and visitors' food preferences. The tutorial will also illustrate the use of the [tidyverse](https://www.tidyverse.org/) packages in R, which offer an excellent set of data wrangling and visualization tools. 
+In this tutorial, I will walk the reader through the steps of obtaining, cleaning and visualizing data scraped from the web using R. As an example, I will consider online food blogs and illustrate how one can get insights on recipes, ingredients and visitors' food preferences. The tutorial will also illustrate the use of data wrangling by [tidyverse](https://www.tidyverse.org/), and natural language processing with [tidytext](https://cran.r-project.org/web/packages/tidytext/vignettes/tidytext.html) packages in R. These packages offer an excellent set of data wrangling and visualization tools, which have made R one of the go-to language for data scientists. 
 
 ## Web Scraping
 First, we need to obtain the data from the blog posts. For this tutorial, I have chosen to scrape data from two sites:
@@ -45,7 +45,7 @@ trim_ <- function(link){
     str_split(temp1, " ")[[1]][1]
  }
 ```
-To be able to see how I came uo with these, the reader should open one of the pages and look at the html source (which can be done by any browser's source view tool). The source code can be messy, but locating relevant pieces of information by repeating patterns become straighforward after looking through a few of the pages that are being scraped. The code for scraping all the recipe links from [The Full Helping](https://www.thefullhelping.com/) is almost identical, with a few small twists. 
+To be able to see how I came up with these, the reader should open one of the pages and look at the html source (which can be done by any browser's source view tool). The source code can be messy, but locating relevant pieces of information by repeating patterns become straightforward after looking through a few of the pages that are being scraped. The code for scraping all the recipe links from [The Full Helping](https://www.thefullhelping.com/) is almost identical, with a few small twists. 
 
 Now we have all the links, the next step is to one by one connect to each link and gather the data from each recipe. This step is more tedious than the previous one, since every site stores its recipe data in a different format. For example, [Pinch of Yum](http://pinchofyum.com) uses a `json` format for each recipe, which is excellent since the data is pretty much standard across all the pages. Instead, [The Full Helping](https://www.thefullhelping.com/) has the recipe information in html, so it requires a bit more work to collect. 
 
@@ -101,10 +101,10 @@ The data frame `all_recipes_df` contains all the recipes on the blog and has the
 [17] "carbohydrateContent" "fiberContent"        "proteinContent"      "cholesterolContent" 
 ```
 
-The code for The Full Helping is significantly different, and the returned data frame does not have the same fields. I will not dicsuss it here on the post, but the code is included in the repository for interested readers. 
+The code for The Full Helping is significantly different, and the returned data frame does not have the same fields. I will not discuss it here on the post, but the code is included in the repository for interested readers. 
 
 ## Data Wrangling Exploratory Analysis
-Now that we have the collected all the recipes, we can do some exploration. First, let's see which words are most common in the recipes. We will make use of the `tidytext` and `tokenizers` packages for this task. The `ingredients` field contains a flat text file with each line ending with "\n". So our task is to split the text, remove any leftover html tags, and then convert the data frame in long format. What is meant with the long format is that each row will contain one word, so a ringle recipe is spread into multiple rows, whose size is determined by the number of words in the ingredients. This is achieved by the following code snippet
+Now that we have the collected all the recipes, we can do some exploration. First, let's see which words are most common in the recipes. We will make use of the `tidytext` and `tokenizers` packages for this task. The `ingredients` field contains a flat text file with each line ending with "\n". So our task is to split the text, remove any leftover html tags, and then convert the data frame in long format. What is meant with the long format is that each row will contain one word, so a single recipe is spread into multiple rows, whose size is determined by the number of words in the ingredients. This is achieved by the following code snippet
 
 ```r
 # Assing and ID number to each recipe
@@ -132,7 +132,7 @@ For example, the first 10 entries would look like
 ## 1.8  1 minced
 ## 1.9  1      1
 ```
-The `unnest_tokens` function achieves the transformation to the long format. Notice that this is not great, since we have numbers and other non-informative words that is so common in all the ingredients, that we would like to get rid of them. While there are better ways of removing very common but not informative words (e.g. [tf-idf](https://en.wikipedia.org/wiki/Tf-idf)), let's simply remove `stop_words` and some common mesurement related words manually:
+The `unnest_tokens` function achieves the transformation to the long format. Notice that this is not great, since we have numbers and other non-informative words that is so common in all the ingredients, that we would like to get rid of them. While there are better ways of removing very common but not informative words (e.g. [tf-idf](https://en.wikipedia.org/wiki/Tf-idf)), let's simply remove `stop_words` and some common measurement related words manually:
 
 ```r
 # Stop words from tokenizers package
@@ -155,7 +155,7 @@ After this step, we have a much better looking data frame. The wordcloud from al
 
 Let's also look at how words in all the recipes are associated with each other. Certain words would tend to cluster in certain types of recipes, for example one would expect to see sugar, flour and baking in a given recipe, but not garlic and chocolate (hopefully!). So let's perform a few steps of data wrangling to visualize how words are distributed. 
 
-Firts let us simply reduce the number of words by limiting to the top 25
+First let us simply reduce the number of words by limiting to the top 25
 
 ```r
 top_words <- df_ingrdt %>% count(word, sort = TRUE) %>% slice(1:25)
@@ -198,7 +198,7 @@ df_ingrdt <- df_ingrdt %>%
   mutate_at(vars, function(x) ifelse(x > 0, 1, 0))
 ```
 
-As a result, we obtain a table with one-hot encoded words for each recipe. Let's construct the [principal component](https://en.wikipedia.org/wiki/Principal_component_analysis) vectors, and use the first two to visulaize the data
+As a result, we obtain a table with one-hot encoded words for each recipe. Let's construct the [principal component](https://en.wikipedia.org/wiki/Principal_component_analysis) vectors, and use the first two to visualize the data
 
 ```r
 ## Principal components for ingredients
@@ -211,7 +211,7 @@ biplot(pc, scale = FALSE, cex = c(0.2, 0.8) )
 
 ![title](img/PCA_ingredients.png)
 
-The x and y axes are the first two principal component vetors, and each red vector correspond to the projection of the associated word on these principal component vectors. The plot shows which words tend to be close to each other and provide some insights on the recipes:
+The x and y axes are the first two principal component vectors, and each red vector correspond to the projection of the associated word on these principal component vectors. The plot shows which words tend to be close to each other and provide some insights on the recipes:
 
 * Ingredient vectors used in baking tend to be close to each other (milk, sugar, butter, flour etc.)
 * Cheese, slice and shredded are close to each other (for obvious reasons)
@@ -222,7 +222,7 @@ We can perform a similar exercise for the `description` field as well, and it le
 
 ## Inference
 
-Now that we have gone through all this trouble and scraping and tidying the data, let's try to experiment with predictive algorithms. We can devide to go in several avenues here, but there are several issues here. One is temped to use the data for predicting ratings, however this is a bit problematic once we look at their distribution
+Now that we have gone through all this trouble and scraping and tidying the data, let's try to experiment with predictive algorithms. We can decide to go in several avenues here, but there are several issues here. One is temped to use the data for predicting ratings, however this is a bit problematic once we look at their distribution
 
 ![title](img/ratinghistogram.png)
 
@@ -261,3 +261,47 @@ The `ID` is the unique identifier of a recipe, `highViews` is 1 for recipes that
 Before trying a model for predicting `highViews`, let's see whether we can obtain some insights by visualizing the data. Below is a plot that shows the high and low number of ratings in each month and year:
 
 ![title](img/viewsbydate.png)
+
+Notice that `highViews` increase by year. This is not surprising, since the blog started to gather following after some time when it first started. Now let's look at which words in the name of the recipe are correlated with `highViews`
+
+![title](img/wordCounts.png)
+
+The recipe names with word stems *chicken*, *potato* and *salad* tend to be rated more, while *fn*, *span* and *class* tend be rated less. OK, finally let's train a model:
+
+```r
+library(randomForest)
+library(caret)
+dat <- model_df %>% 
+  select(-c(ID,rating))
+
+# Training control
+ctrl <- trainControl(method="cv", number=10, verboseIter = TRUE)
+rf_grid <- expand.grid(mtry = c(2,5,10,15,20))
+
+mod <- train(x = select(dat, -highViews), y = ifelse(dat$highViews == 1, "y","n"),
+             method = "rf", trControl = ctrl, tuneGrid = rf_grid)
+```
+
+The above code snippet performs a 10-fold cross validation to find the best parameter `mtry` in the [Random forest](https://en.wikipedia.org/wiki/Random_forest) algorithm. `mtry` is the number of columns randomly picked to grow trees at each step. Once this is tun, the training ends with the best `mtry`=5 and results in 74% accuracy in predicting `highViews`. This is not great, but a good start. One can add more features that we have ignored in constructing our data to increase the accuracy. 
+
+Random forest also gives us which features are the most important (using the amount a given feature reduces the Gini index, one of the most common error rates used for classification in tree based methods). These are the top ten most important features that Random Forest has found:
+
+```
+   MeanDecreaseGini variable
+1         78.290588       yr
+2         20.446105      mon
+3          4.876325     bowl
+4          4.703937  chicken
+5          4.427031 crockpot
+6          3.971014    minut
+7          3.495288   lentil
+8          3.203090    salad
+9          3.107316     soup
+10         3.067923    spici
+```
+
+The `yr` and `mon` are the most important features as expected from our analysis above. It looks like the word `bowl` is also very important, possibly due to the popularity of *one bown dinners* nowadays. 
+
+## Final words
+In this post, I illustrated the use of web scraping, data wrangling and natural language processing tools in R. There are many interesting projects one can do with online food blog data, and this is only a scratch on the surface. 
+
