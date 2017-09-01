@@ -105,7 +105,7 @@ The data frame `all_recipes_df` contains all the recipes on the blog and has the
 
 The code for The Full Helping is significantly different, and the returned data frame does not have the same fields. I will not discuss it here on the post, but the code is included in the [repository](https://github.com/bhimmetoglu/datasciencecom-r-tutorial) for interested readers. 
 
-## Data Wrangling Exploratory Analysis
+## Data Wrangling & Exploratory Analysis
 Now that we have the collected all the recipes, we can do some exploration. First, let's see which words are the most common in the recipes. We will make use of the `tidytext` and `tokenizers` packages for this task. The `ingredients` field contains a flat text with each line ending with "\n". So our task is to split the text, remove any leftover html tags, and then convert the data frame into a long format. What is meant with the long format is that each row will contain one word, so a single recipe is spread into multiple rows, whose size is determined by the number of words in the ingredients. This is achieved by the following code snippet
 
 ```r
