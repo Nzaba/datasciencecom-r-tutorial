@@ -2,27 +2,28 @@
 ## Author: B. Himmetoglu
 ## Modelling: How names of recipes are correlated with number of ratings?
 #
-# Load libraries
-library(tidyr)
-library(stringr)
-library(dplyr)
-library(purrr)
-library(tidytext)
-library(tokenizers)
-library(syuzhet)
-library(ggplot2)
-library(SnowballC)
+
+# install and load the libraries if not already available, tested with R version 3.3.0
+for (package in c("tidyr", "stringr", "dplyr", "purrr", "tidytext", "tokenizers", "syuzhet", "ggplot2", "SnowballC")) {
+    if (!require(package, character.only=T, quietly=T)) {
+        install.packages(package)
+        library(package, character.only=T)
+    }
+}
 
 # Load the data.frame of all recipes
 load(file="all_recipes.RData")
 
 # NAs
+# Is this just counting the number of NAs, do we do anything with it ? or is the idea here to get more info as a part of
+# data exploration story
 all_recipes_df %>% map_dbl(~sum(is.na(.x)))
 
 # Let's assign an ID number to each recipe
 all_recipes_df <- all_recipes_df %>% mutate(ID = 1:nrow(all_recipes_df))
 
 # Convert date into three columns: year, month, day
+# "pub_date variable seems to be not defined in the dataset, possible to cross check on that ?"
 all_recipes_df <- all_recipes_df %>%
   mutate(date = ymd(pub_date))%>%
   mutate(yr = year(pub_date)) %>%
@@ -42,7 +43,7 @@ df_reviews <- all_recipes_df %>%
 
 # Replace NA's in nReviews with 0
 df_reviews <- df_reviews %>%
-  mutate(nReviews = ifelse(is.na(nReviews),0,nReviews))
+  mutate(nReviews = ifelse(is.na(nReviews), 0, nReviews))
 
 # Create a new column: large/small nReviews
 med_nRev <- median(df_reviews$nReviews)
@@ -52,8 +53,15 @@ df_reviews <- df_reviews %>%
 # Combine with raings
 # Remove stop words and numbers
 data("stop_words")
+
+# Is the below code not needed,
+# Also remove the following (which is not included in stopwords)
+word_remove = c("cup", "cups", "teaspoon", "teaspoons", "tablespoon", "tablespoons",
+"ounce", "ounces", "lb", "lbs", "tbs", "tsp", "oz", "handful", "handfull",
+"inch", "i", "can")
 df_name <- df_name %>% 
   filter(!(word %in% stopwords())) %>%
+  filter(!(word %in% word_remove)) %>%
   filter(!(str_detect(word, "[0-9]")))
 
 # Get word stems
@@ -77,6 +85,8 @@ df <- model_df %>%
   count(word) %>%
   ungroup(highViews) %>%
   mutate(highViews = as.factor(highViews))
+
+# Will it not be a good idea to add code for word cloud as well ?
 
 gg <- ggplot(df, aes(word,n)) +
   geom_bar(stat="identity", aes(fill=highViews), position = "dodge") + 
@@ -114,12 +124,15 @@ model_df <- model_df %>%
   mutate_at(vars, function(x) ifelse(x > 0, 1, 0))
 
 # Train a model (e.g. randomForest)
+# Lets move all imports at the top ??
 library(randomForest)
 library(caret)
 dat <- model_df %>% 
   select(-c(ID,rating))
 
 ctrl <- trainControl(method="cv", number=10, verboseIter = TRUE)
+# Reference: list of hyperparameters associated with the model could be found here:
+## http://topepo.github.io/caret/available-models.html
 rf_grid <- expand.grid(mtry = c(2,5,10,15,20))
 
 mod <- train(x = select(dat, -highViews), y = ifelse(dat$highViews == 1, "y","n"),
