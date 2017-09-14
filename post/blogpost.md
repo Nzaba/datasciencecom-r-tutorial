@@ -14,7 +14,8 @@ First, we need to obtain the data from the blog posts. For this tutorial, I have
 1. [Pich of Yum](http://pinchofyum.com)
 2. [The Full Helping](https://www.thefullhelping.com/)
 
-These are excellent food blogs with lots of great recipes and nice photographs. Let us consider the first blog (Pinch of Yum) as an example, since it has more recipe entries. There are 51 pages (at the time where this tutorial was written) of recipes, each containing 15 recipe links. The first task is to collect all the links to these recipes, which we can do with the following code snippet
+These are excellent food blogs with lots of great recipes and nice photographs. Let us consider the first blog (Pinch of Yum) as an example, since it has more recipe entries. There are 51 pages (at the time when this tutorial was written) of recipes, each containing 15 recipe links. 
+The first task is to collect all the links to these recipes, which we can do with the following code snippet
 
 ```r
 get_recipe_links <- function(page_number){

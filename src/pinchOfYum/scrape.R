@@ -12,7 +12,8 @@ library(jsonlite)
 library(lubridate)
 
 # Load the functions in utilities
-source("utilities.R")
+# Depending on how one has loaded the source code, one might have to adjust the relative path
+source("pinchOfYum/utilities.R")
 
 ## Get all the links (takes a while to run)
 if(!file.exists("all_links.RData")){

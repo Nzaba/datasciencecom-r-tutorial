@@ -2,22 +2,18 @@
 ## Author: B. Himmetoglu
 ## Modelling: How names of recipes are correlated with number of ratings?
 #
-# Load libraries
-library(tidyr)
-library(stringr)
-library(dplyr)
-library(purrr)
-library(tidytext)
-library(tokenizers)
-library(syuzhet)
-library(ggplot2)
-library(SnowballC)
+
+# install and load the libraries if not already available, tested with R version 3.3.0
+for (package in c("tidyr", "stringr", "dplyr", "purrr", "tidytext", "tokenizers", "syuzhet", "ggplot2", "SnowballC", 
+                  "wordcloud", "caret", "randomForest")) {
+    if (!require(package, character.only=T, quietly=T)) {
+        install.packages(package)
+        library(package, character.only=T)
+    }
+}
 
 # Load the data.frame of all recipes
 load(file="all_recipes.RData")
-
-# NAs
-all_recipes_df %>% map_dbl(~sum(is.na(.x)))
 
 # Let's assign an ID number to each recipe
 all_recipes_df <- all_recipes_df %>% mutate(ID = 1:nrow(all_recipes_df))
@@ -42,7 +38,7 @@ df_reviews <- all_recipes_df %>%
 
 # Replace NA's in nReviews with 0
 df_reviews <- df_reviews %>%
-  mutate(nReviews = ifelse(is.na(nReviews),0,nReviews))
+  mutate(nReviews = ifelse(is.na(nReviews), 0, nReviews))
 
 # Create a new column: large/small nReviews
 med_nRev <- median(df_reviews$nReviews)
@@ -52,8 +48,14 @@ df_reviews <- df_reviews %>%
 # Combine with raings
 # Remove stop words and numbers
 data("stop_words")
+
+# Also remove the following (which is not included in stopwords)
+word_remove = c("cup", "cups", "teaspoon", "teaspoons", "tablespoon", "tablespoons",
+"ounce", "ounces", "lb", "lbs", "tbs", "tsp", "oz", "handful", "handfull",
+"inch", "i", "can")
 df_name <- df_name %>% 
   filter(!(word %in% stopwords())) %>%
+  filter(!(word %in% word_remove)) %>%
   filter(!(str_detect(word, "[0-9]")))
 
 # Get word stems
@@ -69,6 +71,9 @@ model_df <- left_join(df_reviews %>% select(ID, rating, highViews, mon, yr),
 
 # Get the most common 25 words in the ingredients for visualization
 top_words <- model_df %>% count(word, sort = TRUE) %>% slice(1:25)
+
+# Visualize by word clouds
+wordcloud(top_words$wordm top_words$n, colors = brewer.pal(8, "Dark2"))
 
 # Visualize how words in title correlate with highviews
 df <- model_df %>% 
@@ -114,12 +119,12 @@ model_df <- model_df %>%
   mutate_at(vars, function(x) ifelse(x > 0, 1, 0))
 
 # Train a model (e.g. randomForest)
-library(randomForest)
-library(caret)
 dat <- model_df %>% 
   select(-c(ID,rating))
 
 ctrl <- trainControl(method="cv", number=10, verboseIter = TRUE)
+# Reference: list of hyperparameters associated with the model could be found here:
+## http://topepo.github.io/caret/available-models.html
 rf_grid <- expand.grid(mtry = c(2,5,10,15,20))
 
 mod <- train(x = select(dat, -highViews), y = ifelse(dat$highViews == 1, "y","n"),
