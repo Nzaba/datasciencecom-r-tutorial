@@ -13,4 +13,6 @@
 load(file="all_recipes.RData")
 ```
 
+This file is included for reference. 
+
 An example usage can be viweved in this [notebook](https://github.com/bhimmetoglu/datasciencecom-r-tutorial/blob/master/post/contains/foodBlogs.md).
