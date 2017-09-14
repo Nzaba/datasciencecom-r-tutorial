@@ -44,6 +44,17 @@ get_recipe_data <- function(link_to_recipe){
   # Get the recipe page
   page <- read_html(link_to_recipe)
   
+  # Get recipe publish date/time
+  meta <- html_nodes(page, "meta")
+  dt <- meta[map_lgl(meta, str_detect, "article:published_time")] %>%
+    str_replace_all("\"|/|<|>", " ") %>%
+    str_replace_all("meta|property=|article:published_time|content=", "") %>%
+    str_trim() %>%
+    str_split("T")
+  
+  date <- dt[[1]][1]
+  time <- dt[[1]][2]
+  
   # JSON data
   script_ <- html_nodes(page, "script")
   loc_json <- which(str_detect(script_, "application/ld"))
@@ -117,7 +128,9 @@ get_recipe_data <- function(link_to_recipe){
   nutrition_df <- get_nutrition(recipe_data)
   
   # Return data frame (combined with nutrition information)
-  df_1 <- data.frame(name=recipe_data$name, 
+  df_1 <- data.frame(name=recipe_data$name,
+                     pub_time = time,
+                     pub_date = date,
                      description=description,
                      ingredients=ingredients,
                      prepTime=prepTime,
