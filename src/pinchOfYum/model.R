@@ -4,7 +4,8 @@
 #
 
 # install and load the libraries if not already available, tested with R version 3.3.0
-for (package in c("tidyr", "stringr", "dplyr", "purrr", "tidytext", "tokenizers", "syuzhet", "ggplot2", "SnowballC")) {
+for (package in c("tidyr", "stringr", "dplyr", "purrr", "tidytext", "tokenizers", "syuzhet", "ggplot2", "SnowballC", 
+                  "wordcloud", "caret", "randomForest")) {
     if (!require(package, character.only=T, quietly=T)) {
         install.packages(package)
         library(package, character.only=T)
@@ -14,16 +15,10 @@ for (package in c("tidyr", "stringr", "dplyr", "purrr", "tidytext", "tokenizers"
 # Load the data.frame of all recipes
 load(file="all_recipes.RData")
 
-# NAs
-# Is this just counting the number of NAs, do we do anything with it ? or is the idea here to get more info as a part of
-# data exploration story
-all_recipes_df %>% map_dbl(~sum(is.na(.x)))
-
 # Let's assign an ID number to each recipe
 all_recipes_df <- all_recipes_df %>% mutate(ID = 1:nrow(all_recipes_df))
 
 # Convert date into three columns: year, month, day
-# "pub_date variable seems to be not defined in the dataset, possible to cross check on that ?"
 all_recipes_df <- all_recipes_df %>%
   mutate(date = ymd(pub_date))%>%
   mutate(yr = year(pub_date)) %>%
@@ -54,7 +49,6 @@ df_reviews <- df_reviews %>%
 # Remove stop words and numbers
 data("stop_words")
 
-# Is the below code not needed,
 # Also remove the following (which is not included in stopwords)
 word_remove = c("cup", "cups", "teaspoon", "teaspoons", "tablespoon", "tablespoons",
 "ounce", "ounces", "lb", "lbs", "tbs", "tsp", "oz", "handful", "handfull",
@@ -78,6 +72,9 @@ model_df <- left_join(df_reviews %>% select(ID, rating, highViews, mon, yr),
 # Get the most common 25 words in the ingredients for visualization
 top_words <- model_df %>% count(word, sort = TRUE) %>% slice(1:25)
 
+# Visualize by word clouds
+wordcloud(top_words$wordm top_words$n, colors = brewer.pal(8, "Dark2"))
+
 # Visualize how words in title correlate with highviews
 df <- model_df %>% 
   filter(word %in% top_words$word) %>%
@@ -85,8 +82,6 @@ df <- model_df %>%
   count(word) %>%
   ungroup(highViews) %>%
   mutate(highViews = as.factor(highViews))
-
-# Will it not be a good idea to add code for word cloud as well ?
 
 gg <- ggplot(df, aes(word,n)) +
   geom_bar(stat="identity", aes(fill=highViews), position = "dodge") + 
@@ -124,9 +119,6 @@ model_df <- model_df %>%
   mutate_at(vars, function(x) ifelse(x > 0, 1, 0))
 
 # Train a model (e.g. randomForest)
-# Lets move all imports at the top ??
-library(randomForest)
-library(caret)
 dat <- model_df %>% 
   select(-c(ID,rating))
 
