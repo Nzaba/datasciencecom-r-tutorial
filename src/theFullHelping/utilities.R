@@ -11,6 +11,17 @@ library(rvest)
 library(jsonlite)
 library(lubridate)
 
+# Function for trimming each link
+trim_ <- function(link){
+  temp1 <- str_split(link, " ")[[1]][3] %>%
+    str_replace_all("\"", "") %>% # Remove \'s
+    str_replace("href=", "") %>%
+    str_replace(">", " ")
+  
+  # Return
+  str_split(temp1, " ")[[1]][1]
+}
+
 # Function for connecting to a given page of the blog and getting all the links to all the recipes
 get_recipe_links <- function(page_number){
   page <- read_html(paste0("http://www.thefullhelping.com/recipes/?fwp_paged=", as.character(page_number)))
@@ -23,17 +34,6 @@ get_recipe_links <- function(page_number){
   # Some links are not recipe related: filter them out
   mask <- map_lgl(links, str_detect, "entry-image-link")
   links <- links[mask]
-  
-  # Function for trimming each link
-  trim_ <- function(link){
-    temp1 <- str_split(link, " ")[[1]][3] %>%
-      str_replace_all("\"", "") %>% # Remove \'s
-      str_replace("href=", "") %>%
-      str_replace(">", " ")
-    temp1 <- str_split(temp1, " ")[[1]][1]
-    
-    temp1
-  }
   
   # Trim the text to get proper links
   all_recipe_links <- map_chr(links, trim_)

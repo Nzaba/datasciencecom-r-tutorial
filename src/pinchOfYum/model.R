@@ -5,7 +5,7 @@
 
 # install and load the libraries if not already available, tested with R version 3.3.0
 for (package in c("tidyr", "stringr", "dplyr", "purrr", "tidytext", "tokenizers", "syuzhet", "ggplot2", "SnowballC", 
-                  "wordcloud", "caret", "randomForest")) {
+                  "wordcloud", "caret", "randomForest", "lubridate")) {
     if (!require(package, character.only=T, quietly=T)) {
         install.packages(package)
         library(package, character.only=T)
@@ -45,15 +45,16 @@ med_nRev <- median(df_reviews$nReviews)
 df_reviews <- df_reviews %>% 
   mutate(highViews = ifelse(nReviews >= med_nRev, 1, 0))
 
-# Combine with raings
+# Combine with ratings
 # Remove stop words and numbers
 data("stop_words")
 
-# Also remove the following (which is not included in stopwords)
+# Also remove the following (which are not included in stopwords)
 word_remove = c("cup", "cups", "teaspoon", "teaspoons", "tablespoon", "tablespoons",
 "ounce", "ounces", "lb", "lbs", "tbs", "tsp", "oz", "handful", "handfull",
 "inch", "i", "can")
-df_name <- df_name %>% 
+
+df_name <- df_name %>%
   filter(!(word %in% stopwords())) %>%
   filter(!(word %in% word_remove)) %>%
   filter(!(str_detect(word, "[0-9]")))
@@ -69,11 +70,11 @@ df_name %>% count(word, sort = TRUE) %>% slice(1:10)
 model_df <- left_join(df_reviews %>% select(ID, rating, highViews, mon, yr), 
                       df_name, by = "ID")
 
-# Get the most common 25 words in the ingredients for visualization
+# Get the most common 50 words in the ingredients for visualization
 top_words <- model_df %>% count(word, sort = TRUE) %>% slice(1:25)
 
 # Visualize by word clouds
-wordcloud(top_words$wordm top_words$n, colors = brewer.pal(8, "Dark2"))
+wordcloud(top_words$word, top_words$n, colors = brewer.pal(8, "Dark2"))
 
 # Visualize how words in title correlate with highviews
 df <- model_df %>% 
